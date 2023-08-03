@@ -5,19 +5,9 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour
 {
     private PlayerData playerData;
-    private Rigidbody2D rb2D;
-
-    [SerializeField] private Transform feetTransform;
-    [SerializeField] private float groundCheckRadius = 1f;
-    [SerializeField] private Vector2 checkBoxSize = new Vector2(0.1f, 0.1f);
-    [SerializeField] private LayerMask groundLayerMask;
-    // [SerializeField] private float jumpForce = 5f;
-    private bool isTop = false;
-    private bool isJump = false;
 
     private void Awake()
     {
-        rb2D = GetComponent<Rigidbody2D>();
         playerData = GetComponent<PlayerData>();
     }
 
@@ -26,80 +16,35 @@ public class PlayerController : MonoBehaviour
         SetGravityScale(playerData.gravityScale);
     }
 
+    private void SetGravityScale(float gravityScale)
+    {
+        playerData.rigidbody2D.gravityScale = gravityScale;
+    }
+
     private void Update()
     {
         playerData.currentJumpBufferTime -= Time.deltaTime;
 
-        if (Input.GetKeyDown(KeyCode.Mouse0))
+        if (Input.GetKey(KeyCode.Mouse0))
         {
             playerData.currentJumpBufferTime = playerData.jumpBufferTime;
-            // if (IsGround())
-            // {
-            //     isJump = true;
-            // }
         }
 
         if (Input.GetKeyDown(KeyCode.Mouse1))
         {
-            ChangeGravity();
+            SetGravityScale(GetNegateValue(playerData.rigidbody2D.gravityScale));
             RotatePlayer();
         }
     }
 
-    private void FixedUpdate()
+    private float GetNegateValue(float value)
     {
-        if (playerData.currentJumpBufferTime > 0 && IsGround())
-        {
-            Jump();
-        }
-
-        // if (isJump)
-        // {
-        //     Jump();
-        //     isJump = false;
-        // }
-    }
-
-    private void SetGravityScale(float gravityScale)
-    {
-        rb2D.gravityScale = gravityScale;
-    }
-
-    private bool IsGround()
-    {
-        return Physics2D.OverlapBox(feetTransform.position, checkBoxSize, 0, groundLayerMask);
-    }
-
-    private bool CanJump()
-    {
-        return IsGround() && true;
-    }
-
-    private void Jump()
-    {
-        rb2D.AddForce(transform.up * GetJumpForce(), ForceMode2D.Impulse);
-    }
-
-    private float GetJumpForce()
-    {
-        float jumpForce = playerData.jumpForce;
-
-        if (rb2D.velocity.y < 0)
-        {
-            jumpForce -= rb2D.velocity.y;
-        }
-
-        return jumpForce;
-    }
-
-    private void ChangeGravity()
-    {
-        rb2D.gravityScale *= -1;
+        return value *= -1;
     }
 
     private void RotatePlayer()
     {
-        if (!isTop)
+        if (!playerData.isTop)
         {
             transform.eulerAngles = new Vector3(0f, 0f, 180f);
         }
@@ -108,12 +53,47 @@ public class PlayerController : MonoBehaviour
             transform.eulerAngles = Vector3.zero;
         }
 
-        isTop = !isTop;
+        playerData.isTop = !playerData.isTop;
+    }
+
+    private void FixedUpdate()
+    {
+        if (CanJump())
+        {
+            Jump();
+        }
+    }
+
+    private bool CanJump()
+    {
+        return IsGround() && playerData.currentJumpBufferTime > 0;
+    }
+
+    private bool IsGround()
+    {
+        return Physics2D.OverlapBox(playerData.feetTransform.position, playerData.checkBoxSize, 0, playerData.groundLayerMask);
+    }
+
+    private void Jump()
+    {
+        playerData.rigidbody2D.AddForce(transform.up * GetJumpForce(), ForceMode2D.Impulse);
+    }
+
+    private float GetJumpForce()
+    {
+        float jumpForce = playerData.jumpForce;
+
+        if (playerData.rigidbody2D.velocity.y < 0)
+        {
+            jumpForce -= playerData.rigidbody2D.velocity.y;
+        }
+
+        return jumpForce;
     }
 
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.blue;
-        Gizmos.DrawWireCube(feetTransform.position, checkBoxSize);
+        Gizmos.DrawWireCube(playerData.feetTransform.position, playerData.checkBoxSize);
     }
 }
