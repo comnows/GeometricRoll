@@ -19,11 +19,17 @@ public class PlayerData : MonoBehaviour
     public float currentJumpBufferTime = 0f;
 
     [Header("Ground Checker")]
-    public Transform feetTransform;
-    public Vector2 checkBoxSize = new Vector2(0.1f, 0.1f);
+    public Transform groundCheckTransform;
+    [Range(0.01f, 0.5f)] public float additionCheckBoxSize = 0.05f;
+    [ReadOnly] public Vector2 checkBoxSize;
     public LayerMask groundLayerMask;
 
-    [ReadOnly] public bool isTop = false;
+    public Transform spriteTransform;
+    [ReadOnly] public bool isGravityFlip = false;
+
+    [Range(1f, 20f)] public float lerpSpeed;
+    [ReadOnly] public float lerpTime = 0f;
+    [ReadOnly] public Vector3 startSpriteRotation = Vector3.zero;
 
     private void OnValidate()
     {
@@ -36,5 +42,10 @@ public class PlayerData : MonoBehaviour
         gravityScale = gravityStrength / Physics2D.gravity.y;
 
         jumpForce = Mathf.Abs(gravityStrength) * jumpTimeToApex;
+
+        if (spriteTransform != null)
+        {
+            checkBoxSize = new Vector2(spriteTransform.localScale.x + additionCheckBoxSize, additionCheckBoxSize);
+        }
     }
 }
